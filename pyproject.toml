@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seocli"
+version = "0.1.0"
+description = "SEO crawling & auditing CLI — built for AI agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+keywords = ["seo", "audit", "crawl", "cli", "seo-audit", "mcp", "agent"]
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Software Development :: Testing :: Traffic Generation",
+    "Natural Language :: English",
+]
+
+[project.optional-dependencies]
+js = ["playwright>=1.40"]
+mcp = ["mcp>=1.0"]
+
+[project.scripts]
+seocli = "seocli.__main__:main"
+seocli-mcp = "seocli.server:main"
+
+[project.urls]
+Homepage = "https://github.com/lennney/seocli"
+Repository = "https://github.com/lennney/seocli"
+"Bug Tracker" = "https://github.com/lennney/seocli/issues"
+
+[tool.setuptools.packages.find]
+include = ["seocli*"]
