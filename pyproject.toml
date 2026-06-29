@@ -4,10 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seocli"
-version = "0.1.0"
+version = "0.1.1"
 description = "SEO crawling & auditing CLI — built for AI agents"
 readme = "README.md"
 license = "MIT"
+authors = [
+    { name = "lennney", email = "lennney@users.noreply.github.com" },
+]
 requires-python = ">=3.9"
 keywords = ["seo", "audit", "crawl", "cli", "seo-audit", "mcp", "agent"]
 dependencies = [
