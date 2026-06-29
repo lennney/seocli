@@ -2,11 +2,15 @@
 """
 seocli MCP server — exposes website auditing as an MCP tool.
 
-Register in ~/.claude/mcp.json:
+Quick setup:
+  pip install seocli[mcp]
+  seocli setup                              # auto-registers in ~/.claude/mcp.json
+
+Or manually register in ~/.claude/mcp.json:
 {
   "mcpServers": {
     "seocli": {
-      "command": "python",
+      "command": "python3",
       "args": ["-m", "seocli.server"]
     }
   }
