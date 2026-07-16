@@ -1,0 +1,107 @@
+name: SEO Audit
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to audit'
+        required: true
+        default: 'https://example.com'
+      max_depth:
+        description: 'Crawl depth'
+        required: false
+        default: '3'
+      max_urls:
+        description: 'Max URLs'
+        required: false
+        default: '200'
+
+jobs:
+  seo-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install seocli
+        run: pip install seocli
+
+      - name: Run SEO Audit
+        id: audit
+        run: |
+          URL="${{ github.event.inputs.url || format('{0}{1}', secrets.DEPLOY_URL, '') }}"
+          if [ -z "$URL" ]; then
+            echo "No URL provided. Set DEPLOY_URL secret or use workflow_dispatch."
+            exit 0
+          fi
+          seocli "$URL" \
+            --max-urls ${{ github.event.inputs.max_urls || 200 }} \
+            --depth ${{ github.event.inputs.max_depth || 3 }} \
+            --delay 0 \
+            --fail-on error \
+            --format markdown \
+            --json seo-report.json
+
+      - name: Upload Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-report
+          path: |
+            seo-report.json
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('seo-report.json', 'utf8');
+            const data = JSON.parse(report);
+            const stats = data.stats || {};
+            const issues = data.issues || [];
+            const errors = issues.filter(i => i.type === 'error').length;
+            const warnings = issues.filter(i => i.type === 'warning').length;
+
+            let body = `## 🔍 SEO Audit Results\n\n`;
+            body += `**${stats.crawled || 0} pages crawled** in ${stats.elapsed_seconds || 0}s\n\n`;
+
+            if (errors === 0 && warnings === 0) {
+              body += `✅ **No SEO issues found.**\n`;
+            } else {
+              body += `| Type | Count |\n|------|-------|\n`;
+              body += `| 🔴 Errors | ${errors} |\n`;
+              body += `| 🟡 Warnings | ${warnings} |\n`;
+              body += `| 🔵 Info | ${issues.filter(i => i.type === 'info').length} |\n`;
+
+              if (errors > 0) {
+                body += `\n### Top Errors\n`;
+                for (const issue of issues.filter(i => i.type === 'error').slice(0, 5)) {
+                  body += `- 🔴 **${issue.issue}** — [${issue.url}](${issue.url})\n  ${issue.details}\n`;
+                }
+              }
+              if (warnings > 0) {
+                body += `\n### Top Warnings\n`;
+                for (const issue of issues.filter(i => i.type === 'warning').slice(0, 5)) {
+                  body += `- 🟡 **${issue.issue}** — [${issue.url}](${issue.url})\n  ${issue.details}\n`;
+                }
+              }
+            }
+
+            body += `\n<details><summary>Full Report</summary>\n\n\`\`\`json\n${report.slice(0, 3000)}\n\`\`\`\n</details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body,
+            });

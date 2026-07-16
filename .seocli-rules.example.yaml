@@ -1,0 +1,52 @@
+# seocli Custom Rules — copy to .seocli-rules.yaml and customize
+# Docs: https://github.com/lennney/seocli#custom-rules
+
+rules:
+  # React apps must have <div id="root">
+  - name: "React Root Element Missing"
+    check: field_matches_regex
+    field: "meta_tags.generator"
+    pattern: "(?i)react"
+    severity: warning
+    category: "Custom"
+    include_urls: ["*"]
+    message: "Page appears to be React but has no React generator meta tag"
+
+  # E-commerce: product pages need at least 300 words
+  - name: "Product Page Too Short"
+    check: field_min_length
+    field: word_count
+    min_value: 300
+    severity: warning
+    category: "Content"
+    include_urls: ["*/product/*", "*/products/*", "*/p/*"]
+    message: "Product page has fewer than 300 words"
+
+  # Blog posts need a publish date
+  - name: "Blog Post Missing Publish Date"
+    check: field_exists
+    field: "meta_tags.article:published_time"
+    severity: error
+    category: "SEO"
+    include_urls: ["*/blog/*", "*/post/*", "*/articles/*"]
+    message: "Blog post missing article:published_time meta tag"
+
+  # News sites: no thin content on article pages
+  - name: "News Article Too Short"
+    check: field_min_length
+    field: word_count
+    min_value: 200
+    severity: error
+    category: "Content"
+    include_urls: ["*/news/*", "*/story/*"]
+    message: "News article is too short (<200 words)"
+
+  # All pages: must have viewport meta tag
+  - name: "Missing Viewport on Non-API Page"
+    check: field_not_empty
+    field: viewport
+    severity: error
+    category: "Mobile"
+    include_urls: ["*"]
+    exclude_urls: ["*/api/*", "*/graphql/*", "*/_next/*"]
+    message: "Page served to users has no viewport meta tag"

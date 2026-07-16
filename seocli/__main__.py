@@ -98,6 +98,9 @@ def cmd_audit(args):
         'discover_sitemaps': True,
     }
 
+    if args.rules:
+        config['custom_rules_path'] = args.rules
+
     from seocli.crawl import Crawler
 
     crawler = Crawler(config)
@@ -229,6 +232,7 @@ def main(argv=None):
                         default='json', help='Output format (default: json)')
     parser.add_argument('--fail-on', choices=['error', 'warning', 'info', 'none'],
                         default='none', help='Exit with code 1 if issues at this level or above exist')
+    parser.add_argument('--rules', metavar='FILE', help='Custom rules file (.yaml or .json) for user-defined SEO checks')
 
     args = parser.parse_args(argv)
     cmd_audit(args)

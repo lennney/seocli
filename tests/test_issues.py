@@ -497,3 +497,93 @@ class TestCoreWebVitals:
         issues = detector.get_issues()
         cwv_issues = [i for i in issues if i['category'] == 'Performance' and 'Response' not in i['issue'] and 'Page Size' not in i['issue']]
         assert len(cwv_issues) == 0
+
+
+class TestGEOIssues:
+    def test_ai_crawlers_blocked(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': True, 'has_structured_data': True,
+            'content_structure_score': 4, 'has_conclusion_section': True,
+            'has_source_citations': True, 'has_clear_author': True,
+            'has_publish_date': True, 'has_faq_schema': False,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('AI Crawlers Blocked' in i['issue'] for i in issues)
+
+    def test_no_structured_data_geo(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': False, 'has_structured_data': False,
+            'content_structure_score': 4, 'has_conclusion_section': True,
+            'has_source_citations': True, 'has_clear_author': True,
+            'has_publish_date': True, 'has_faq_schema': False,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('No Structured Data for AI' in i['issue'] for i in issues)
+
+    def test_low_content_structure(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': False, 'has_structured_data': True,
+            'content_structure_score': 1, 'has_conclusion_section': False,
+            'has_source_citations': False, 'has_clear_author': False,
+            'has_publish_date': False, 'has_faq_schema': False,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('Low Content Structure' in i['issue'] for i in issues)
+
+    def test_no_conclusion(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': False, 'has_structured_data': True,
+            'content_structure_score': 4, 'has_conclusion_section': False,
+            'has_source_citations': True, 'has_clear_author': True,
+            'has_publish_date': True, 'has_faq_schema': False,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('No Conclusion Section' in i['issue'] for i in issues)
+
+    def test_no_citations(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': False, 'has_structured_data': True,
+            'content_structure_score': 4, 'has_conclusion_section': True,
+            'has_source_citations': False, 'has_clear_author': True,
+            'has_publish_date': True, 'has_faq_schema': False,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('No Source Citations' in i['issue'] for i in issues)
+
+    def test_no_author(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': False, 'has_structured_data': True,
+            'content_structure_score': 4, 'has_conclusion_section': True,
+            'has_source_citations': True, 'has_clear_author': False,
+            'has_publish_date': True, 'has_faq_schema': False,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('No Author Attribution' in i['issue'] for i in issues)
+
+    def test_no_publish_date(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': False, 'has_structured_data': True,
+            'content_structure_score': 4, 'has_conclusion_section': True,
+            'has_source_citations': True, 'has_clear_author': True,
+            'has_publish_date': False, 'has_faq_schema': False,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('No Publish Date' in i['issue'] for i in issues)
+
+    def test_faq_schema_info(self, detector, basic_page_result):
+        basic_page_result['geo_signals'] = {
+            'ai_crawler_blocked': False, 'has_structured_data': True,
+            'content_structure_score': 4, 'has_conclusion_section': True,
+            'has_source_citations': True, 'has_clear_author': True,
+            'has_publish_date': True, 'has_faq_schema': True,
+        }
+        detector.detect_issues(basic_page_result)
+        issues = detector.get_issues()
+        assert any('FAQ Schema Present' in i['issue'] for i in issues)

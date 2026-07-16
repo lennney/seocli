@@ -224,7 +224,21 @@ SEO · Technical · Content · Mobile · Accessibility · Social · Structured D
 
 ---
 
-## What's New in v0.3.0
+## What's New in v0.4.0
+
+### GEO (Generative Engine Optimization) — AI Search Readiness
+
+First-of-its-kind GEO category: checks if pages are optimized for AI search engines (ChatGPT, Perplexity, Google AI Overviews). 8 new rules covering: AI crawler blocking, content structure for AI models, source citations, author attribution (E-E-A-T), publish dates, FAQ schema detection, and more.
+
+### Custom Rules DSL
+
+Define your own SEO checks in `.seocli-rules.yaml` — no Python code needed. 8 check types: field_exists, field_matches_regex, list_min_items, and more. URL include/exclude patterns via glob. See `.seocli-rules.example.yaml`.
+
+### GitHub Action
+
+Official CI/CD integration: auto-audit on PRs, comment results, fail on errors. See `.github/workflows/seo-audit.yml`.
+
+### What's New in v0.3.0
 
 ### MCP Deepening — AI Agent Native
 
@@ -314,7 +328,32 @@ options:
   --no-duplicate-check  Skip duplicate content detection (faster on large sites)
   --format {json,csv,markdown,md,html}   Output format (default: json)
   --fail-on {error,warning,info,none}    CI gate: exit 1 if issues at this level exist
+  --rules FILE          Custom rules config (.yaml or .json)
   --help                Show this help
+```
+
+---
+
+## Custom Rules
+
+Define your own SEO checks in `.seocli-rules.yaml`:
+
+```bash
+# Run with custom rules
+seocli https://example.com --rules .seocli-rules.yaml
+
+# Example: check all product pages have >300 words
+# See .seocli-rules.example.yaml for more examples
+```
+
+8 check types: `field_exists`, `field_not_empty`, `field_min_length`, `field_max_length`, `field_matches_regex`, `field_not_matches_regex`, `list_min_items`, `url_matches_pattern`. URL include/exclude patterns via glob.
+
+### GitHub Action
+
+```yaml
+# .github/workflows/seo-audit.yml
+# Auto-audits on PR, comments results, fails on errors
+# See .github/workflows/seo-audit.yml
 ```
 
 ---

@@ -8,10 +8,14 @@ from difflib import SequenceMatcher
 class IssueDetector:
     """Detects SEO and technical issues in crawled pages"""
 
-    def __init__(self, exclusion_patterns=None):
+    def __init__(self, exclusion_patterns=None, custom_rules_path=None):
         self.exclusion_patterns = exclusion_patterns or []
         self.detected_issues = []
         self.issues_lock = threading.Lock()
+        self.custom_engine = None
+        if custom_rules_path:
+            from seocli.core.rules import CustomRuleEngine
+            self.custom_engine = CustomRuleEngine(custom_rules_path)
 
     def detect_issues(self, result):
         """Detect SEO issues for a crawled URL"""
@@ -34,6 +38,10 @@ class IssueDetector:
         self._check_broken_image_issues(result, issues)
         self._check_security_issues(result, issues)
         self._check_ssl_issues(result, issues)
+        self._check_geo_issues(result, issues)
+        if self.custom_engine:
+            custom_issues = self.custom_engine.check(result)
+            issues.extend(custom_issues)
         with self.issues_lock:
             self.detected_issues.extend(issues)
 
@@ -310,6 +318,69 @@ class IssueDetector:
                 'url': url, 'type': 'error', 'category': 'Security',
                 'issue': 'HTTP Used on Form Page',
                 'details': 'Page with form served over HTTP instead of HTTPS — data transmitted in plaintext',
+            })
+
+    def _check_geo_issues(self, result, issues):
+        """Check GEO (Generative Engine Optimization) signals for AI search readiness."""
+        url = result.get('url', '')
+        geo = result.get('geo_signals', {})
+        if not geo:
+            return
+
+        if geo.get('ai_crawler_blocked'):
+            issues.append({
+                'url': url, 'type': 'error', 'category': 'GEO',
+                'issue': 'AI Crawlers Blocked',
+                'details': 'Robots meta blocks AI crawlers (GPTBot, Claude, etc.) — page will not appear in AI search results',
+            })
+
+        if not geo.get('has_structured_data'):
+            issues.append({
+                'url': url, 'type': 'warning', 'category': 'GEO',
+                'issue': 'No Structured Data for AI',
+                'details': 'No JSON-LD or Schema.org markup — AI crawlers rely on structured data to understand content',
+            })
+
+        if geo.get('has_faq_schema'):
+            issues.append({
+                'url': url, 'type': 'info', 'category': 'GEO',
+                'issue': 'FAQ Schema Present',
+                'details': 'FAQPage schema detected — eligible for AI-generated answer snippets',
+            })
+
+        if geo.get('content_structure_score', 0) < 3:
+            issues.append({
+                'url': url, 'type': 'warning', 'category': 'GEO',
+                'issue': 'Low Content Structure',
+                'details': f'Content structure score: {geo["content_structure_score"]}/6 — AI models prefer well-structured content with clear headings',
+            })
+
+        if not geo.get('has_conclusion_section'):
+            issues.append({
+                'url': url, 'type': 'info', 'category': 'GEO',
+                'issue': 'No Conclusion Section',
+                'details': 'Page lacks a clear conclusion/summary section — AI models extract summaries more effectively from structured conclusions',
+            })
+
+        if not geo.get('has_source_citations'):
+            issues.append({
+                'url': url, 'type': 'info', 'category': 'GEO',
+                'issue': 'No Source Citations',
+                'details': 'No citation patterns or authoritative external links detected — AI models value well-cited content',
+            })
+
+        if not geo.get('has_clear_author'):
+            issues.append({
+                'url': url, 'type': 'warning', 'category': 'GEO',
+                'issue': 'No Author Attribution',
+                'details': 'No author meta tag — AI search engines favor content with clear authorship (E-E-A-T signal)',
+            })
+
+        if not geo.get('has_publish_date'):
+            issues.append({
+                'url': url, 'type': 'info', 'category': 'GEO',
+                'issue': 'No Publish Date',
+                'details': 'No publication date metadata — AI models prefer fresh, dated content for timeliness',
             })
 
     def detect_duplication_issues(self, all_results, similarity_threshold=0.85):

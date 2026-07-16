@@ -16,6 +16,7 @@ from seocli.core.link import LinkManager
 from seocli.core.seo import SEOExtractor
 from seocli.core.sitemap import SitemapParser
 from seocli.core.issues import IssueDetector
+from seocli.core.geo import GEOExtractor
 
 
 def classify_fetch_error(exc_or_msg):
@@ -119,7 +120,9 @@ class Crawler:
         self.rate_limiter = RateLimiter(rps)
         self.link_manager = LinkManager(self.base_domain)
         self.sitemap_parser = SitemapParser(self.session, self.base_domain, self.config['timeout'])
-        self.issue_detector = IssueDetector()
+        self.issue_detector = IssueDetector(
+            custom_rules_path=self.config.get('custom_rules_path')
+        )
 
         self.crawl_results.clear()
         self.stats = {'discovered': 0, 'crawled': 0, 'depth': 0, 'speed': 0.0, 'start_time': time.time()}
@@ -335,6 +338,7 @@ class Crawler:
                 self.seo_extractor.extract_form_presence(soup, result)
                 self.seo_extractor.extract_accessibility_data(soup, result)
                 self.seo_extractor.extract_cwv_signals(soup, result)
+                GEOExtractor.extract_geo_signals(soup, result, url)
 
                 if self.link_manager:
                     # Collect all links for reporting
@@ -397,6 +401,7 @@ class Crawler:
             self.seo_extractor.extract_schema_org(soup, result)
             self.seo_extractor.extract_form_presence(soup, result)
             self.seo_extractor.extract_cwv_signals(soup, result)
+            GEOExtractor.extract_geo_signals(soup, result, url)
 
             if self.link_manager:
                 self.link_manager.collect_all_links(soup, url, self.crawl_results)
