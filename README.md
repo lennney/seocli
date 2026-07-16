@@ -261,29 +261,3 @@ python -m seocli.server
 
 MIT
 
----
-
-## Review Module (formerly seo-review-board)
-
-The `review/` directory contains the multi-agent SEO review framework, merged from the now-archived `seo-review-board` repository.
-
-### What's Inside
-
-| Path | Description |
-|---|---|
-| `review/SKILL.md` | Skill definition for multi-agent review |
-| `review/roles/` | Reviewer role definitions (library, etc.) |
-| `review/scenarios/` | Review scenarios: tech-review, seo-content-review, product-review |
-| `review/adapters/` | Platform adapters: claude-code, codex, hermes |
-| `review/references/` | Checklists & templates: scoring, PRD, document-consistency, etc. |
-| `review/install.sh` | Installation script |
-
-### Usage
-
-```bash
-# The review framework integrates with seocli as a sub-module.
-# Use the SKILL.md in review/ to set up multi-agent review sessions.
-# See review/REVIEW_BOARD_README.md for full documentation.
-```
-
-> **Note**: This module was migrated from `lennney/seo-review-board` (archived).
