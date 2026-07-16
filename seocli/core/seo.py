@@ -209,6 +209,100 @@ class SEOExtractor:
         result['schema_org'] = schemas
 
     @staticmethod
+    def extract_form_presence(soup, result):
+        """Detect if page contains a login/signup/checkout form."""
+        forms = soup.find_all('form')
+        for form in forms:
+            action = (form.get('action', '') or '').lower()
+            has_password = form.find('input', type='password') is not None
+            if has_password or any(kw in action for kw in ['login', 'signin', 'signup', 'register', 'checkout', 'auth']):
+                result['has_form'] = True
+                return
+        result['has_form'] = bool(forms)
+
+    @staticmethod
+    def extract_accessibility_data(soup, result):
+        """Extract ARIA attributes, tabindex, skip links, contrast issues."""
+        aria_roles = set()
+        for el in soup.find_all(attrs={'role': True}):
+            aria_roles.add(el.get('role', ''))
+
+        positive_tabindex = []
+        for el in soup.find_all(attrs={'tabindex': True}):
+            try:
+                if int(el.get('tabindex', '0')) > 0:
+                    positive_tabindex.append(str(el.name))
+            except ValueError:
+                pass
+
+        has_skip_link = False
+        for link in soup.find_all('a', href=True):
+            href = (link.get('href', '') or '').lower()
+            text = (link.get_text() or '').lower()
+            if href.startswith('#') and any(kw in text for kw in ['skip', 'jump to content', 'main content']):
+                has_skip_link = True
+                break
+
+        potential_contrast_issues = 0
+        for el in soup.find_all(style=True):
+            style = (el.get('style', '') or '').lower()
+            if 'color' in style and ('background' in style or 'bg' in style):
+                potential_contrast_issues += 1
+
+        result['accessibility'] = {
+            'aria_roles': sorted(aria_roles),
+            'aria_labels_count': len(soup.find_all(attrs={'aria-label': True})),
+            'positive_tabindex_elements': positive_tabindex,
+            'has_skip_link': has_skip_link,
+            'potential_contrast_issues': potential_contrast_issues,
+        }
+
+    @staticmethod
+    def extract_cwv_signals(soup, result):
+        """Extract signals that correlate with Core Web Vitals issues (static analysis only)."""
+        cwv = {
+            'large_images_without_dimensions': 0,
+            'dom_element_count': 0,
+            'missing_font_display': False,
+            'missing_preconnect': False,
+            'inline_scripts_count': 0,
+            'inline_styles_count': 0,
+            'render_blocking_resources': 0,
+        }
+
+        cwv['dom_element_count'] = len(soup.find_all())
+
+        for img in soup.find_all('img'):
+            src = img.get('src', '')
+            if not img.get('width') and not img.get('height') and src:
+                cwv['large_images_without_dimensions'] += 1
+
+        for style in soup.find_all('style'):
+            css = style.string or ''
+            if '@font-face' in css and 'font-display' not in css:
+                cwv['missing_font_display'] = True
+                break
+
+        has_preconnect = False
+        for link in soup.find_all('link'):
+            rel = link.get('rel', '')
+            if isinstance(rel, list):
+                rel = ' '.join(rel)
+            if 'preconnect' in rel or 'dns-prefetch' in rel:
+                has_preconnect = True
+                break
+        cwv['missing_preconnect'] = not has_preconnect
+
+        cwv['inline_scripts_count'] = len([s for s in soup.find_all('script') if not s.get('src') and not s.get('defer') and not s.get('async')])
+        cwv['inline_styles_count'] = len(soup.find_all('style'))
+        cwv['render_blocking_resources'] = (
+            len([s for s in soup.find_all('script', src=True) if not s.get('defer') and not s.get('async')])
+            + len(soup.find_all('link', rel='stylesheet'))
+        )
+
+        result['cwv_signals'] = cwv
+
+    @staticmethod
     def create_empty_result(url, depth, status_code, error, error_type=None):
         """Create a result for failed requests"""
         return {
@@ -233,5 +327,23 @@ class SEOExtractor:
             'internal_links': 0, 'external_links': 0,
             'response_time': 0,
             'redirects': [], 'hreflang': [], 'schema_org': [],
-            'linked_from': []
+            'linked_from': [],
+            'response_headers': {},
+            'has_form': False,
+            'accessibility': {
+                'aria_roles': [],
+                'aria_labels_count': 0,
+                'positive_tabindex_elements': [],
+                'has_skip_link': False,
+                'potential_contrast_issues': 0,
+            },
+            'cwv_signals': {
+                'large_images_without_dimensions': 0,
+                'dom_element_count': 0,
+                'missing_font_display': False,
+                'missing_preconnect': False,
+                'inline_scripts_count': 0,
+                'inline_styles_count': 0,
+                'render_blocking_resources': 0,
+            },
         }

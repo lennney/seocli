@@ -317,6 +317,7 @@ class Crawler:
                 'size': len(response.content),
                 'is_internal': is_internal,
             })
+            result['response_headers'] = dict(response.headers)
 
             if 'text/html' in response.headers.get('content-type', ''):
                 soup = BeautifulSoup(response.content, 'html.parser')
@@ -331,6 +332,9 @@ class Crawler:
                 self.seo_extractor.extract_link_counts(soup, result, self.base_domain)
                 self.seo_extractor.extract_hreflang(soup, result)
                 self.seo_extractor.extract_schema_org(soup, result)
+                self.seo_extractor.extract_form_presence(soup, result)
+                self.seo_extractor.extract_accessibility_data(soup, result)
+                self.seo_extractor.extract_cwv_signals(soup, result)
 
                 if self.link_manager:
                     # Collect all links for reporting
@@ -391,6 +395,8 @@ class Crawler:
             self.seo_extractor.extract_link_counts(soup, result, self.base_domain)
             self.seo_extractor.extract_hreflang(soup, result)
             self.seo_extractor.extract_schema_org(soup, result)
+            self.seo_extractor.extract_form_presence(soup, result)
+            self.seo_extractor.extract_cwv_signals(soup, result)
 
             if self.link_manager:
                 self.link_manager.collect_all_links(soup, url, self.crawl_results)

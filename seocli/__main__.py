@@ -152,8 +152,19 @@ def cmd_audit(args):
                 if parts:
                     print(f"   {cat}: {' '.join(parts)}", file=sys.stderr)
 
-    # Output JSON
-    output = json.dumps(results, indent=2, default=str, ensure_ascii=False)
+    # Output (format routing: json default, plus csv / markdown / md / html)
+    from seocli.core.formats import to_csv, to_markdown, to_html
+
+    if args.format == 'csv':
+        csv_data = to_csv(results)
+        output = f"=== ISSUES ===\n{csv_data['issues']}\n=== PAGES ===\n{csv_data['pages']}"
+    elif args.format in ('markdown', 'md'):
+        output = to_markdown(results)
+    elif args.format == 'html':
+        output = to_html(results)
+    else:
+        output = json.dumps(results, indent=2, default=str, ensure_ascii=False)
+
     if args.json:
         with open(args.json, 'w') as f:
             f.write(output)
@@ -161,6 +172,15 @@ def cmd_audit(args):
             print(f"\n📁 Saved to: {args.json}", file=sys.stderr)
     else:
         print(output)
+
+    # CI fail-on gate — exit 1 if any issue at/above the configured severity exists.
+    if args.fail_on != 'none':
+        severity = {'error': 0, 'warning': 1, 'info': 2}
+        threshold = severity[args.fail_on]
+        for issue in results['issues']:
+            if severity.get(issue['type'], 99) <= threshold:
+                print(f"❌ CI gate failed: found {issue['type']} issue — {issue['issue']}", file=sys.stderr)
+                sys.exit(1)
 
 
 def main(argv=None):
@@ -205,6 +225,10 @@ def main(argv=None):
     parser.add_argument('--json', metavar='FILE', help='Output JSON to file (default: print to stdout)')
     parser.add_argument('--quiet', '-q', action='store_true', help='Suppress progress output, only print final JSON')
     parser.add_argument('--no-duplicate-check', action='store_true', help='Skip duplicate content detection (O(n²), slower on large sets)')
+    parser.add_argument('--format', choices=['json', 'csv', 'markdown', 'md', 'html'],
+                        default='json', help='Output format (default: json)')
+    parser.add_argument('--fail-on', choices=['error', 'warning', 'info', 'none'],
+                        default='none', help='Exit with code 1 if issues at this level or above exist')
 
     args = parser.parse_args(argv)
     cmd_audit(args)

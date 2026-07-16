@@ -199,6 +199,52 @@ SEO · Technical · Content · Mobile · Accessibility · Social · Structured D
 
 ---
 
+## What's New in v0.2.0
+
+### New Rule Categories
+
+| Category | New Rules | Type |
+|----------|-----------|------|
+| **Security** | HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Page Served Over HTTP, HTTP on Form Pages | error |
+| **Accessibility** | ARIA Landmarks, Positive Tabindex, Missing Skip Link, Potential Contrast Issues | error/warning |
+| **Structured Data** | JSON-LD @context validation, @type validation, Schema.org itemtype | warning |
+| **Performance** | Images Without Dimensions (CLS), Large DOM Size, Missing font-display, No Preconnect Hints, Render-Blocking Resources | warning/info |
+| **SSL** | HTTPS usage check | error |
+
+### New Output Formats
+
+| Format | Flag | Description |
+|--------|------|-------------|
+| JSON | `--format json` (default) | Structured JSON for AI agents and programmatic use |
+| CSV | `--format csv` | Issues + Pages as CSV for spreadsheet analysis |
+| Markdown | `--format markdown` | Human-readable report with emoji-coded issues |
+| HTML | `--format html` | Standalone HTML report with styled table |
+
+### CI/CD Integration
+
+```bash
+# Fail if any errors found (exit code 1)
+seocli https://example.com --fail-on error
+
+# Fail if any warnings or errors found
+seocli https://example.com --fail-on warning
+```
+
+### Testing
+
+seocli now includes a comprehensive test suite. Run with:
+
+```bash
+pip install seocli[dev]
+python -m pytest tests/ -v
+```
+
+### Rule Count: 25 → 60+
+
+v0.2.0 more than doubles the number of SEO audit rules from 25 to over 60, covering security headers, accessibility deep-dive, structured data quality, SSL/HTTPS, and Core Web Vitals static signals.
+
+---
+
 ## CLI Usage
 
 | Scenario | Command |
@@ -233,6 +279,8 @@ options:
   --json FILE           Save JSON output to file
   --quiet, -q           Suppress progress output
   --no-duplicate-check  Skip duplicate content detection (faster on large sites)
+  --format {json,csv,markdown,md,html}   Output format (default: json)
+  --fail-on {error,warning,info,none}    CI gate: exit 1 if issues at this level exist
   --help                Show this help
 ```
 

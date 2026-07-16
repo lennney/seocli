@@ -1,4 +1,4 @@
 # seocli - SEO Crawling & Auditing CLI
 # For agent usage: run `seocli --help` or read README.md
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
