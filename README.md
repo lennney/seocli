@@ -59,12 +59,37 @@ Add to `~/.claude/mcp.json`:
 }
 ```
 
-Then restart Claude Code. Two tools become available:
+Then restart Claude Code. These tools become available:
 
 | Tool | Description |
 |------|-------------|
 | `seocli_audit` | Full crawl + audit. Returns pages, issues, links, stats as JSON. |
 | `seocli_issues_summary` | Quick shallow crawl + grouped issue summary. Faster. |
+| `seocli_audit_start` | Start async crawl (large sites). Returns `session_id` immediately. |
+| `seocli_audit_poll` | Poll async session for incremental results + progress. |
+| `seocli_audit_results` | Get final results of an async session. |
+| `seocli://audit/latest` | Resource: most recent audit result as JSON. |
+| `seocli://audit/score` | Resource: 0-100 site health score with letter grade. |
+
+### Async Audits (Large Sites)
+
+For sites with 50+ pages, use the async flow to avoid long blocking waits:
+
+```
+1. seocli_audit_start(url) → session_id
+2. seocli_audit_poll(session_id) → incremental issues + progress
+3. seocli_audit_results(session_id) → final report
+```
+
+### Agent Prompt Templates
+
+Ready-to-use prompt snippets for AI agents: see [`prompts/`](prompts/) directory.
+
+| File | For |
+|------|-----|
+| `prompts/claude-code.md` | Claude Code |
+| `prompts/cursor.md` | Cursor IDE |
+| `prompts/generic-mcp.md` | Any MCP agent |
 
 ### Any MCP Host
 
@@ -199,7 +224,15 @@ SEO · Technical · Content · Mobile · Accessibility · Social · Structured D
 
 ---
 
-## What's New in v0.2.0
+## What's New in v0.3.0
+
+### MCP Deepening — AI Agent Native
+
+- **Async audits**: `seocli_audit_start` / `seocli_audit_poll` / `seocli_audit_results` — incremental reporting for large sites
+- **MCP Resources**: `seocli://audit/score` (0-100 health score) and `seocli://audit/latest` (cached result)
+- **Prompt templates**: Ready-to-use agent prompts for Claude Code, Cursor, and any MCP agent in `prompts/`
+
+### What's New in v0.2.0
 
 ### New Rule Categories
 
