@@ -380,3 +380,14 @@ python -m seocli.server
 ## License
 
 MIT
+
+
+---
+
+## Related Tools
+
+| Project | Description |
+|---|---|
+| [seo-review-board](https://github.com/lennney/seo-review-board) (archived) | Multi-agent SEO 评审框架模板 — 角色定义、场景模板、评分系统 |
+| [crawlweaver](https://github.com/lennney/crawlweaver) | 12-Factor AI 爬虫，可与 seocli 配合做内容审计 |
+| [agent-search-mcp](https://github.com/lennney/agent-search-mcp) | 多源搜索 MCP，seocli 可调用做关键词研究 |
